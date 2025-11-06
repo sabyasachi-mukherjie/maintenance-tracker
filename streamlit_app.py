@@ -1,27 +1,25 @@
-import streamlit as st
-import gspread
-import pandas as pd
-from google.oauth2.service_account import Credentials
 import json
+from google.oauth2.service_account import Credentials
+import gspread
+import streamlit as st
 
-# ==============================
-# CONFIGURATION
-# ==============================
-SHEET_NAME = "Society_Maintenance"
-WORKSHEET_NAME = "Due_Amounts"
+# Your scopes
 SCOPE = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
 ]
 
-# ==============================
-# GOOGLE SHEETS AUTHENTICATION USING STREAMLIT SECRETS
-# ==============================
-# In Streamlit Cloud, go to Settings -> Secrets
-# Add key: GOOGLE_CREDS_JSON and value: <entire service_account.json>
+# Load credentials from Streamlit secrets
 service_account_info = json.loads(st.secrets["GOOGLE_CREDS_JSON"])
 creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPE)
+
+# Authorize gspread
 client = gspread.authorize(creds)
+
+# Open your sheet
+SHEET_NAME = "Society_Maintenance"
+WORKSHEET_NAME = "Due_Amounts"
+
 
 # Open the sheet safely
 try:
