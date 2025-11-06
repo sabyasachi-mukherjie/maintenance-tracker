@@ -2,6 +2,7 @@ import streamlit as st
 import gspread
 import pandas as pd
 from google.oauth2.service_account import Credentials
+import json
 
 # ==============================
 # CONFIGURATION
@@ -14,11 +15,23 @@ SCOPE = [
 ]
 
 # ==============================
-# GOOGLE SHEETS AUTHENTICATION
+# GOOGLE SHEETS AUTHENTICATION USING STREAMLIT SECRETS
 # ==============================
-creds = Credentials.from_service_account_file("service_account.json", scopes=SCOPE)
+# In Streamlit Cloud, go to Settings -> Secrets
+# Add key: GOOGLE_CREDS_JSON and value: <entire service_account.json>
+service_account_info = json.loads(st.secrets["GOOGLE_CREDS_JSON"])
+creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPE)
 client = gspread.authorize(creds)
-sheet = client.open(SHEET_NAME).worksheet(WORKSHEET_NAME)
+
+# Open the sheet safely
+try:
+    sheet = client.open(SHEET_NAME).worksheet(WORKSHEET_NAME)
+except gspread.SpreadsheetNotFound:
+    st.error(f"Spreadsheet '{SHEET_NAME}' not found. Make sure the service account has access.")
+    st.stop()
+except gspread.WorksheetNotFound:
+    st.error(f"Worksheet '{WORKSHEET_NAME}' not found in '{SHEET_NAME}'.")
+    st.stop()
 
 # ==============================
 # STREAMLIT UI
@@ -110,9 +123,4 @@ with st.expander("📋 Edit Maintenance Dues (Click to Expand)", expanded=False)
         for col in editable_cols:
             if edited_df.at[i, col] != st.session_state.edited_df.at[i, col]:
                 st.session_state.edited_df.at[i, col] = edited_df.at[i, col]
-                st.session_state.edited_df.iloc[i] = recalc_row(st.session_state.edited_df.iloc[i])
-                st.session_state.changed_rows.add(i)
-
-# Display the updated table outside the expander
-st.subheader("📊 Updated Calculations")
-st.dataframe(st.session_state.edited_df, use_container_width=True)
+                st.session_state.edited_df.iloc[i] =
