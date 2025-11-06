@@ -14,14 +14,11 @@ SCOPE = [
 ]
 
 # ==============================
-# GOOGLE SHEETS AUTHENTICATION USING SECRETS
+# GOOGLE SHEETS AUTHENTICATION
 # ==============================
 # Load service account info from Streamlit secrets
-service_account_info = dict(st.secrets["google"])
-# Replace literal \n with actual newlines in the private key
-service_account_info["private_key"] = service_account_info["private_key"].replace("\\n", "\n")
+service_account_info = st.secrets["google"]
 
-# Authenticate
 creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPE)
 client = gspread.authorize(creds)
 sheet = client.open(SHEET_NAME).worksheet(WORKSHEET_NAME)
@@ -57,13 +54,13 @@ if "changed_rows" not in st.session_state:
 def recalc_row(row):
     """Recalculate totals for a single row"""
     row["Total Amount/Month"] = (
-        float(row["Regular Maintenance"])
-        + int(row["# of Bike"]) * 100
-        + int(row["# of Cycle"]) * 50
-        + float(row["Shop Area"])
-        + float(row["Parking Area"])
+        float(row.get("Regular Maintenance", 0))
+        + int(row.get("# of Bike", 0)) * 100
+        + int(row.get("# of Cycle", 0)) * 50
+        + float(row.get("Shop Area", 0))
+        + float(row.get("Parking Area", 0))
     )
-    row["Total Outstanding Amount"] = row["Total Amount/Month"] * int(row["# of Months Due"])
+    row["Total Outstanding Amount"] = row["Total Amount/Month"] * int(row.get("# of Months Due", 0))
     return row
 
 # ==============================
