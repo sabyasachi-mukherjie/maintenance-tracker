@@ -2,7 +2,6 @@ import streamlit as st
 import gspread
 import pandas as pd
 from google.oauth2.service_account import Credentials
-import json
 
 # ==============================
 # CONFIGURATION
@@ -15,10 +14,14 @@ SCOPE = [
 ]
 
 # ==============================
-# GOOGLE SHEETS AUTHENTICATION (Streamlit Cloud)
+# GOOGLE SHEETS AUTHENTICATION USING SECRETS
 # ==============================
-# Read credentials from Streamlit secrets
-service_account_info = json.loads(st.secrets["GOOGLE_CREDS_JSON"])
+# Load service account info from Streamlit secrets
+service_account_info = dict(st.secrets["google"])
+# Replace literal \n with actual newlines in the private key
+service_account_info["private_key"] = service_account_info["private_key"].replace("\\n", "\n")
+
+# Authenticate
 creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPE)
 client = gspread.authorize(creds)
 sheet = client.open(SHEET_NAME).worksheet(WORKSHEET_NAME)
