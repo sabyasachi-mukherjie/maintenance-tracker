@@ -16,9 +16,9 @@ SCOPE = [
 # ==============================
 # GOOGLE SHEETS AUTHENTICATION
 # ==============================
-# creds = Credentials.from_service_account_file("service_account.json", scopes=SCOPE)
-# client = gspread.authorize(creds)
-# sheet = client.open(SHEET_NAME).worksheet(WORKSHEET_NAME)
+creds = Credentials.from_service_account_file("service_account.json", scopes=SCOPE)
+client = gspread.authorize(creds)
+sheet = client.open(SHEET_NAME).worksheet(WORKSHEET_NAME)
 
 # ==============================
 # STREAMLIT UI
