@@ -1,35 +1,27 @@
-import json
-from google.oauth2.service_account import Credentials
-import gspread
 import streamlit as st
+import gspread
+import pandas as pd
+from google.oauth2.service_account import Credentials
+import json
 
-# Your scopes
+# ==============================
+# CONFIGURATION
+# ==============================
+SHEET_NAME = "Society_Maintenance"
+WORKSHEET_NAME = "Due_Amounts"
 SCOPE = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
 ]
 
-# Load credentials from Streamlit secrets
+# ==============================
+# GOOGLE SHEETS AUTHENTICATION (Streamlit Cloud)
+# ==============================
+# Read credentials from Streamlit secrets
 service_account_info = json.loads(st.secrets["GOOGLE_CREDS_JSON"])
 creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPE)
-
-# Authorize gspread
 client = gspread.authorize(creds)
-
-# Open your sheet
-SHEET_NAME = "Society_Maintenance"
-WORKSHEET_NAME = "Due_Amounts"
-
-
-# Open the sheet safely
-try:
-    sheet = client.open(SHEET_NAME).worksheet(WORKSHEET_NAME)
-except gspread.SpreadsheetNotFound:
-    st.error(f"Spreadsheet '{SHEET_NAME}' not found. Make sure the service account has access.")
-    st.stop()
-except gspread.WorksheetNotFound:
-    st.error(f"Worksheet '{WORKSHEET_NAME}' not found in '{SHEET_NAME}'.")
-    st.stop()
+sheet = client.open(SHEET_NAME).worksheet(WORKSHEET_NAME)
 
 # ==============================
 # STREAMLIT UI
@@ -121,4 +113,9 @@ with st.expander("📋 Edit Maintenance Dues (Click to Expand)", expanded=False)
         for col in editable_cols:
             if edited_df.at[i, col] != st.session_state.edited_df.at[i, col]:
                 st.session_state.edited_df.at[i, col] = edited_df.at[i, col]
-                st.session_state.edited_df.iloc[i] =
+                st.session_state.edited_df.iloc[i] = recalc_row(st.session_state.edited_df.iloc[i])
+                st.session_state.changed_rows.add(i)
+
+# Display the updated table outside the expander
+st.subheader("📊 Updated Calculations")
+st.dataframe(st.session_state.edited_df, use_container_width=True)
